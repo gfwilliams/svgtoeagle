@@ -14,6 +14,7 @@
 */
 
 var container,canvas,ctx;
+var FLIP_HORIZ = true;
 var SCALE = 3.385/(2.53*96);
 var DRAWSIZE = 2;
 var DRAWSCALE = DRAWSIZE/SCALE;
@@ -101,12 +102,14 @@ function drawSVG() {
     if (divs<3) divs = 3;
     var maxLen = l * 1.5 * SCALE / (divs);
     var p = path.getPointAtLength(0).matrixTransform(transform);
+    if (FLIP_HORIZ) p.x = size.width-p.x;
     p = {x:p.x*SCALE, y:p.y*SCALE};
     var last = p;
     var polys = [];
     var points = [];   
     for (var s=0;s<=divs;s++) {
       p = path.getPointAtLength(s*l/divs).matrixTransform(transform);
+      if (FLIP_HORIZ) p.x = size.width-p.x;
       p = {x:p.x*SCALE, y:p.y*SCALE};
       if (dist(p,last)>maxLen) {
         points = simplify(points, SIMPLIFY, SIMPLIFYHQ);
