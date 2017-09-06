@@ -20,6 +20,7 @@ Note: Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
 </pre>
   <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
+  <input type="text" id="svgScale" value="90"/>SVG scale factor</input><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
   <textarea id="result" rows="8" cols="80"></textarea><br/>
@@ -35,7 +36,7 @@ completely filled - but in Eagle the holes are kept.
 
 var container,canvas,ctx;
 var FLIP_HORIZ = true;
-var SCALE = 3.385/(2.53*96); // this is what worked for me & inkscape
+var SCALE = 1/90;
 var DRAWSCALE = 1/SCALE;
 var SUBSAMPLING = 5; // subsampling of SVG path
 var SIMPLIFY = 0.1*SCALE;
@@ -134,6 +135,7 @@ function drawSVG() {
   if (container===undefined) return;
   var FLIP_HORIZ = document.getElementById("flipImage").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
+  SCALE = 1/parseFloat(document.getElementById("svgScale").value);
   container.style.display="block";
   var textarea = document.getElementById("result");
   textarea.value = "change layer "+EAGLE_LAYER+"; change width 5mil; change rank 3; ch pour solid; SET WIRE_BEND 2;\n";
