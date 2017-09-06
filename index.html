@@ -77,45 +77,54 @@ function polygonArea(poly) {
 }
 
 function unpackPoly(poly) {
-  var finalPolys = [];
   for (var p=0;p<poly.length;p++) {
     if (polygonArea(poly[p])>0) {
       poly[p] = poly[p].reverse();
     }
   }
-  var main = poly[0];
+  var finalPolys = [poly[0]];
   for (var p=1;p<poly.length;p++) {
     var path = poly[p];
-    if (isInside(main[0], path) && !isInside(path[0], main)) {
-      // strange - wrong way around - flip
-      var t = path;
-      path = main;
-      main = t;
-    }
-    if (isInside(path[0], main)) {
+
+    var outerPolyIndex = undefined;
+    for (var i=0;i<finalPolys.length;i++) {
+      if (isInside(path[0], finalPolys[i])) {
+        outerPolyIndex = i; 
+        break;
+      } else if (isInside(finalPolys[i], path)) {
+        // polys in wrong order - old one is inside new one
+        var t = path;
+        path = finalPolys[i];
+        finalPolys[i] = path;
+        outerPolyIndex = i; 
+        break;
+      }
+    } 
+
+    if (outerPolyIndex!==undefined) {
+      var outerPoly = finalPolys[outerPolyIndex];
       var minDist = 10000000000;
-      var minMain,minPath;
-      for (var a=0;a<main.length;a++)
+      var minOuter,minPath;
+      for (var a=0;a<outerPoly.length;a++)
         for (var b=0;b<path.length;b++) {
-          var l = dist(main[a],path[b]);
+          var l = dist(outerPoly[a],path[b]);
           if (l<minDist) {
             minDist = l;
-            minMain = a;
+            minOuter = a;
             minPath = b;
           }
         }
-      main = main.slice(0, minMain+1).concat(
-        path.slice(minPath),
-        path.slice(0,minPath+1),
-        main.slice(minMain)
-      );
+      finalPolys[outerPolyIndex] = 
+        outerPoly.slice(0, minOuter+1).concat(
+          path.slice(minPath),
+          path.slice(0,minPath+1),
+          outerPoly.slice(minOuter)
+        );
     } else {
-      // not inside, just add last poly
-      finalPolys.push(main);      
-      main = path;
+      // not inside, just add this poly
+      finalPolys.push(path);      
     }
   }
-  finalPolys.push(main);
   return finalPolys;
 }
 
@@ -162,7 +171,9 @@ function drawSVG() {
   var paths = container.getElementsByTagName("path");
   for (var i=0;i<paths.length;i++) {    
     var path = paths[i]; // SVGPathElement
-    var filled = (path.style.fill!==undefined && path.style.fill!="none");
+    var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none");
+    var stroked = (path.style.stroke!==undefined && path.style.stroke!="" && path.style.stroke!="none");
+    if (!(filled || stroked)) continue; // not drawable (clip path?)
     var transform = path.ownerSVGElement.getScreenCTM().inverse().multiply(path.getScreenCTM())
     var l = path.getTotalLength();
     var divs = Math.round(l*SUBSAMPLING);
