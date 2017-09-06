@@ -1,20 +1,25 @@
 <html>
 <body>
-  <pre>
-Steps:
-=====
+<h1>svgtoeagle</h1>
 
+<p>SVG to Eagle CAD converter - <a href="https://github.com/gfwilliams/svgtoeagle">See here for more info</a></p>
+
+<h3>How to use:</h3>
+
+<pre>
 * In Inkscape
      Path -> Object to path
      Path -> Break apart
+* Enter the layer to use in Eagle     
 * Choose whether to flip the image horizontally or not     
-* Click the upload box below and upload your SVG
+* Click the 'Choose File' box below and upload your SVG
 * Copy contents of Textarea
 * Paste into Eagle CAD
 
 Note: Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
-  </pre>
+</pre>
+  <input type="text" id="eagleLayer"/>Eagle CAD Layer</input><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
   <textarea id="result" rows="8" cols="80"></textarea><br/>
@@ -31,8 +36,7 @@ completely filled - but in Eagle the holes are kept.
 var container,canvas,ctx;
 var FLIP_HORIZ = true;
 var SCALE = 3.385/(2.53*96);
-var DRAWSIZE = 3;
-var DRAWSCALE = DRAWSIZE/SCALE;
+var DRAWSCALE = 1/SCALE;
 var SUBSAMPLING = 5; // subsampling of SVG path
 var SIMPLIFY = 0.1*SCALE;
 var SIMPLIFYHQ = false;
@@ -127,14 +131,25 @@ function plotPoly(points, isFilled) {
 }
 
 function drawSVG() {  
+  if (container===undefined) return;
   var FLIP_HORIZ = document.getElementById("flipImage").checked;
+  var EAGLE_LAYER = document.getElementById("eagleLayer").value;
   container.style.display="block";
   var textarea = document.getElementById("result");
-  textarea.value = "change layer bNames; change width 5mil; change rank 3; ch pour solid; SET WIRE_BEND 2;\n";
+  textarea.value = "change layer "+EAGLE_LAYER+"; change width 5mil; change rank 3; ch pour solid; SET WIRE_BEND 2;\n";
   var size = container.viewBox.baseVal;
+  if (size.width==0 || size.height==0) {
+    size = {
+      width : container.width.baseVal.value,
+      height : container.height.baseVal.value
+    };
+  }
   var exportHeight = size.height*SCALE;
-  canvas.width = size.width*DRAWSIZE;
-  canvas.height = size.height*DRAWSIZE;
+  
+  var drawMultiplier = window.innerWidth/size.width;
+  canvas.width = size.width*drawMultiplier;
+  canvas.height = size.height*drawMultiplier;
+  DRAWSCALE = drawMultiplier / SCALE;
   
   
   
@@ -173,14 +188,14 @@ function drawSVG() {
         points.push(p);
       }
       last = p;
+    }    
+    if (points.length>1) {
+      points = simplify(points, SIMPLIFY, SIMPLIFYHQ);
+      polys.push(points);
     }
-    points = simplify(points, SIMPLIFY, SIMPLIFYHQ);
-    if (points.length>1) polys.push(points);
     ctx.strokeStyle = `hsl(${col+=40},100%,50%)`;
     ctx.fillStyle = `hsla(${col+=40},100%,50%,0.4)`;
     
-    if (i==27)
-      console.log("Test");
     //plotPoly(points);
     if (filled)
       polys = unpackPoly(polys);
