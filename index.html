@@ -8,6 +8,7 @@
 
 <pre>
 * In Inkscape
+     File -> Document Properties -> Set correct document size in millimeters
      Path -> Object to path
      Path -> Break apart
      Set a fill *or* a stroke set for every shape you want
@@ -22,9 +23,10 @@ Note: Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
 </pre>
   <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
-  <input type="text" id="svgScale" value="90"/>SVG scale factor</input><br/>
+  <input type="text" id="svgScale" value="3.542"/>SVG scale factor (if dimensions not found in document)</input><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
+  <pre id="log"></pre><br/>
   <textarea id="result" rows="8" cols="80"></textarea><br/>
   <div id="container"></div>
   <canvas id="can" style="border:1px solid black;"></canvas>  
@@ -43,7 +45,7 @@ var DRAWSCALE = 1/SCALE;
 var SUBSAMPLING = 5; // subsampling of SVG path
 var SIMPLIFY = 0.1*SCALE;
 var SIMPLIFYHQ = false;
-var TRACEWIDTH = 0.004;
+var TRACEWIDTH = "0.1mm";
 
 function dist(a,b) {
   var dx = a.x-b.x;
@@ -146,10 +148,14 @@ function drawSVG() {
   if (container===undefined) return;
   var FLIP_HORIZ = document.getElementById("flipImage").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
-  SCALE = 1/parseFloat(document.getElementById("svgScale").value);
+
   container.style.display="block";
+  var logarea = document.getElementById("log");
+  logarea.innerHTML = "";
+  function log(x) { logarea.innerHTML += x+"\n"; }
   var textarea = document.getElementById("result");
-  textarea.value = "change layer "+EAGLE_LAYER+"; change width 5mil; change rank 3; ch pour solid; SET WIRE_BEND 2;\n";
+  textarea.value = "";
+  function out(x) { textarea.value += x; }
   var size = container.viewBox.baseVal;
   if (size.width==0 || size.height==0) {
     size = {
@@ -157,25 +163,46 @@ function drawSVG() {
       height : container.height.baseVal.value
     };
   }
+
+  var specifiedWidth = container.getAttribute("width");
+  if (specifiedWidth && specifiedWidth.match(/[0-9.]*mm/)) {
+    specifiedWidth = parseFloat(specifiedWidth.slice(0,-2));
+    SCALE = specifiedWidth / size.width;
+    log("SVG width detected in mm \\o/");
+  } else if (specifiedWidth && specifiedWidth.match(/[0-9.]*in/)) {
+    specifiedWidth = parseFloat(specifiedWidth.slice(0,-2))*25.4;
+    SCALE = specifiedWidth / size.width;
+    log("SVG width detected in inches");
+  } else {
+    SCALE = 1/parseFloat(document.getElementById("svgScale").value);
+    log("SVG width not in mm - GUESSING dimensions based on scale factor");
+    log("Try setting document size in mm in Inkscape's Document Properties");
+  }
+  log(`Dimensions ${(size.width*SCALE).toFixed(2)}mm x ${(size.height*SCALE).toFixed(2)}mm`);
+
   var exportHeight = size.height*SCALE;
   
-  var drawMultiplier = window.innerWidth/size.width;
+  var drawMultiplier = (window.innerWidth-40) / size.width;
   canvas.width = size.width*drawMultiplier;
   canvas.height = size.height*drawMultiplier;
   DRAWSCALE = drawMultiplier / SCALE;
-  
-  
+
+  out("change layer "+EAGLE_LAYER+"; change rank 3; ch pour solid; SET WIRE_BEND 2;\n");
   
   ctx.beginPath();
   ctx.lineWidth = 1;
   var scale = 1/96;
   var col = 0;
   var paths = container.getElementsByTagName("path");
+  if (paths.length==0)
+    log("No paths found. Did you use 'Object to path' in Inkscape?");
+  var anyVisiblePaths = false;
   for (var i=0;i<paths.length;i++) {    
     var path = paths[i]; // SVGPathElement
     var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none");
     var stroked = (path.style.stroke!==undefined && path.style.stroke!="" && path.style.stroke!="none");
     if (!(filled || stroked)) continue; // not drawable (clip path?)
+    anyVisiblePaths = true;
     var transform = path.ownerSVGElement.getScreenCTM().inverse().multiply(path.getScreenCTM())
     var l = path.getTotalLength();
     var divs = Math.round(l*SUBSAMPLING);
@@ -226,11 +253,13 @@ function drawSVG() {
       } else {
         scriptLine = "wire "+TRACEWIDTH+" "      
       }
-      points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)} ${(exportHeight-p.y).toFixed(6)})`});
+      points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)}mm ${(exportHeight-p.y).toFixed(6)}mm)`});
       scriptLine += ";"
-      textarea.value += scriptLine+"\n";
+      out(scriptLine+"\n");
     });
   }
+  if (!anyVisiblePaths)
+    log("No paths with fills or strokes found.");
   container.style.display="none";
 }
 
