@@ -50,7 +50,7 @@ var DRAWSCALE = 1/SCALE;
 var SUBSAMPLING = 5; // subsampling of SVG path
 var SIMPLIFY = 0.1*SCALE;
 var SIMPLIFYHQ = false;
-var TRACEWIDTH = "0.1mm";
+var TRACEWIDTH = 0.1; // in mm
 
 function dist(a,b) {
   var dx = a.x-b.x;
@@ -85,11 +85,30 @@ function polygonArea(poly) {
   return area / 2;
 }
 
+// Move a small distance away from path[idxa] towards path[idxb]
+function interpPt(path, idxa, idxb) {
+  var amt = TRACEWIDTH/8; // a fraction of the trace width so we don't get much of a notch in the line
+  // wrap index
+  if (idxb<0) idxb+=path.length;
+  if (idxb>=path.length) idxb-=path.length;
+  // get 2 pts
+  var a = path[idxa];
+  var b = path[idxb];
+  var dx = b.x - a.x;
+  var dy = b.y - a.y;
+  var d = Math.sqrt(dx*dx + dy*dy);
+  if (amt > d) return []; // return nothing - will just end up using the last point
+  return [{ 
+    x : a.x + (dx*amt/d), 
+    y : a.y + (dy*amt/d)
+  }];
+}
+
 function unpackPoly(poly) {
+  // ensure all polys are the right way around
   for (var p=0;p<poly.length;p++) {
-    if (polygonArea(poly[p])>0) {
-      poly[p] = poly[p].reverse();
-    }
+    if (polygonArea(poly[p])>0) 
+      poly[p].reverse();
   }
   var finalPolys = [poly[0]];
   for (var p=1;p<poly.length;p++) {
@@ -104,13 +123,14 @@ function unpackPoly(poly) {
         // polys in wrong order - old one is inside new one
         var t = path;
         path = finalPolys[i];
-        finalPolys[i] = path;
+        finalPolys[i] = t;
         outerPolyIndex = i; 
         break;
       }
     } 
 
     if (outerPolyIndex!==undefined) {
+      path.reverse(); // reverse poly
       var outerPoly = finalPolys[outerPolyIndex];
       var minDist = 10000000000;
       var minOuter,minPath;
@@ -123,11 +143,19 @@ function unpackPoly(poly) {
             minPath = b;
           }
         }
+      // splice the inner poly into the outer poly
+      // but we have to recess the two joins a little
+      // otherwise Eagle reports Invalid poly when filling
+      // the top layer
       finalPolys[outerPolyIndex] = 
-        outerPoly.slice(0, minOuter+1).concat(
-          path.slice(minPath),
-          path.slice(0,minPath+1),
-          outerPoly.slice(minOuter)
+        outerPoly.slice(0, minOuter).concat(
+          interpPt(outerPoly,minOuter,minOuter-1),
+          interpPt(path,minPath,minPath+1),
+          path.slice(minPath+1),
+          path.slice(0,minPath),
+          interpPt(path,minPath,minPath-1),
+          interpPt(outerPoly,minOuter,minOuter+1),
+          outerPoly.slice(minOuter+1)
         );
     } else {
       // not inside, just add this poly
@@ -254,9 +282,9 @@ function drawSVG() {
       if (filled) {
         // re-add final point so we loop around
         points.push(points[0]);    
-        scriptLine = "polygon "+TRACEWIDTH+" "      
+        scriptLine = "polygon "+TRACEWIDTH+"mm "      
       } else {
-        scriptLine = "wire "+TRACEWIDTH+" "      
+        scriptLine = "wire "+TRACEWIDTH+"mm "      
       }
       points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)}mm ${(exportHeight-p.y).toFixed(6)}mm)`});
       scriptLine += ";"
