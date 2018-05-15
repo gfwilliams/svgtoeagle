@@ -9,6 +9,7 @@
 <pre>
 * In Inkscape
      File -> Document Properties -> Set correct document size in millimeters
+     Select all -> Ungroup
      Path -> Object to path
      Path -> Break apart
      Set a fill *or* a stroke set for every shape you want
@@ -16,10 +17,14 @@
 * Enter the layer to use in Eagle     
 * Choose whether to flip the image horizontally or not     
 * Click the 'Choose File' box below and upload your SVG
-* Copy contents of Textarea
-* Paste into Eagle CAD
+* Copy contents of Textarea and Paste into Eagle CAD
 
-Note: Filled polys with holes will show up in the preview as
+Normally copy/paste works fine, however for complex SVGs the
+commands become too big to paste into Eagle's command box. 
+You'll need to copy the contents of the Textarea into a '.scr'
+file and then execute that in Eagle CAD.
+
+<b>Note:</b> Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
 </pre>
   <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
