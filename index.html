@@ -14,13 +14,13 @@
      Path -> Break apart
      Set a fill *or* a stroke set for every shape you want
       - items without a fill or a stroke won't be rendered
-* Enter the layer to use in Eagle     
-* Choose whether to flip the image horizontally or not     
+* Enter the layer to use in Eagle
+* Choose whether to flip the image horizontally or not
 * Click the 'Choose File' box below and upload your SVG
 * Copy contents of Textarea and Paste into Eagle CAD
 
 Normally copy/paste works fine, however for complex SVGs the
-commands become too big to paste into Eagle's command box. 
+commands become too big to paste into Eagle's command box.
 You'll need to copy the contents of the Textarea into a '.scr'
 file and then execute that in Eagle CAD.
 
@@ -28,17 +28,18 @@ file and then execute that in Eagle CAD.
 completely filled - but in Eagle the holes are kept.
 </pre>
   <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
+  <input type="text" id="signalName" value="GND"/>Signal Name (for copper layers, ignored by Eagle otherwise)</input><br/>
   <input type="text" id="svgScale" value="3.542"/>SVG scale factor (if dimensions not found in document)</input><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
   <pre id="log"></pre><br/>
   <textarea id="result" rows="8" cols="80"></textarea><br/>
   <div id="container"></div>
-  <canvas id="can" style="border:1px solid black;"></canvas>  
+  <canvas id="can" style="border:1px solid black;"></canvas>
 <script src="simplify.js"></script>
 <script>
-/* 
-* 
+/*
+*
 
 
 */
@@ -74,7 +75,7 @@ function isInside(point, poly) {
   return inside;
 };
 
-function polygonArea(poly) { 
+function polygonArea(poly) {
   //https://stackoverflow.com/questions/14505565/detect-if-a-set-of-points-in-an-array-that-are-the-vertices-of-a-complex-polygon
   var area = 0;
   for (var i = 0; i < poly.length; i++) {
@@ -98,8 +99,8 @@ function interpPt(path, idxa, idxb) {
   var dy = b.y - a.y;
   var d = Math.sqrt(dx*dx + dy*dy);
   if (amt > d) return []; // return nothing - will just end up using the last point
-  return [{ 
-    x : a.x + (dx*amt/d), 
+  return [{
+    x : a.x + (dx*amt/d),
     y : a.y + (dy*amt/d)
   }];
 }
@@ -107,7 +108,7 @@ function interpPt(path, idxa, idxb) {
 function unpackPoly(poly) {
   // ensure all polys are the right way around
   for (var p=0;p<poly.length;p++) {
-    if (polygonArea(poly[p])>0) 
+    if (polygonArea(poly[p])>0)
       poly[p].reverse();
   }
   var finalPolys = [poly[0]];
@@ -117,17 +118,17 @@ function unpackPoly(poly) {
     var outerPolyIndex = undefined;
     for (var i=0;i<finalPolys.length;i++) {
       if (isInside(path[0], finalPolys[i])) {
-        outerPolyIndex = i; 
+        outerPolyIndex = i;
         break;
       } else if (isInside(finalPolys[i], path)) {
         // polys in wrong order - old one is inside new one
         var t = path;
         path = finalPolys[i];
         finalPolys[i] = t;
-        outerPolyIndex = i; 
+        outerPolyIndex = i;
         break;
       }
-    } 
+    }
 
     if (outerPolyIndex!==undefined) {
       path.reverse(); // reverse poly
@@ -147,7 +148,7 @@ function unpackPoly(poly) {
       // but we have to recess the two joins a little
       // otherwise Eagle reports Invalid poly when filling
       // the top layer
-      finalPolys[outerPolyIndex] = 
+      finalPolys[outerPolyIndex] =
         outerPoly.slice(0, minOuter).concat(
           interpPt(outerPoly,minOuter,minOuter-1),
           interpPt(path,minPath,minPath+1),
@@ -159,7 +160,7 @@ function unpackPoly(poly) {
         );
     } else {
       // not inside, just add this poly
-      finalPolys.push(path);      
+      finalPolys.push(path);
     }
   }
   return finalPolys;
@@ -174,13 +175,14 @@ function plotPoly(points, isFilled) {
     ctx.closePath();
     ctx.fill();
   }
-  ctx.stroke();        
+  ctx.stroke();
 }
 
-function drawSVG() {  
+function drawSVG() {
   if (container===undefined) return;
   var FLIP_HORIZ = document.getElementById("flipImage").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
+  var SIGNAL_NAME = document.getElementById("signalName").value;
 
   container.style.display="block";
   var logarea = document.getElementById("log");
@@ -214,14 +216,14 @@ function drawSVG() {
   log(`Dimensions ${(size.width*SCALE).toFixed(2)}mm x ${(size.height*SCALE).toFixed(2)}mm`);
 
   var exportHeight = size.height*SCALE;
-  
+
   var drawMultiplier = (window.innerWidth-40) / size.width;
   canvas.width = size.width*drawMultiplier;
   canvas.height = size.height*drawMultiplier;
   DRAWSCALE = drawMultiplier / SCALE;
 
   out("change layer "+EAGLE_LAYER+"; change rank 3; ch pour solid; SET WIRE_BEND 2;\n");
-  
+
   ctx.beginPath();
   ctx.lineWidth = 1;
   var scale = 1/96;
@@ -230,7 +232,7 @@ function drawSVG() {
   if (paths.length==0)
     log("No paths found. Did you use 'Object to path' in Inkscape?");
   var anyVisiblePaths = false;
-  for (var i=0;i<paths.length;i++) {    
+  for (var i=0;i<paths.length;i++) {
     var path = paths[i]; // SVGPathElement
     var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none");
     var stroked = (path.style.stroke!==undefined && path.style.stroke!="" && path.style.stroke!="none");
@@ -246,7 +248,7 @@ function drawSVG() {
     p = {x:p.x*SCALE, y:p.y*SCALE};
     var last = p;
     var polys = [];
-    var points = [];   
+    var points = [];
     for (var s=0;s<=divs;s++) {
       p = path.getPointAtLength(s*l/divs).matrixTransform(transform);
       if (FLIP_HORIZ) p.x = size.width-p.x;
@@ -263,28 +265,28 @@ function drawSVG() {
         points.push(p);
       }
       last = p;
-    }    
+    }
     if (points.length>1) {
       points = simplify(points, SIMPLIFY, SIMPLIFYHQ);
       polys.push(points);
     }
     ctx.strokeStyle = `hsl(${col+=40},100%,50%)`;
     ctx.fillStyle = `hsla(${col+=40},100%,50%,0.4)`;
-    
+
     //plotPoly(points);
     if (filled)
       polys = unpackPoly(polys);
-    
+
     polys.forEach(function (points) {
       if (points.length<2) return;
-      plotPoly(points, filled);    
+      plotPoly(points, filled);
       var scriptLine;
       if (filled) {
         // re-add final point so we loop around
-        points.push(points[0]);    
-        scriptLine = "polygon "+TRACEWIDTH+"mm "      
+        points.push(points[0]);
+        scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm "
       } else {
-        scriptLine = "wire "+TRACEWIDTH+"mm "      
+        scriptLine = "wire "+SIGNAL_NAME+" "+TRACEWIDTH+"mm "
       }
       points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)}mm ${(exportHeight-p.y).toFixed(6)}mm)`});
       scriptLine += ";"
@@ -298,7 +300,7 @@ function drawSVG() {
 
 window.addEventListener("load", function(event) {
   container = document.getElementById("container");
-  canvas = document.getElementById("can");  
+  canvas = document.getElementById("can");
   ctx = canvas.getContext('2d');
   //loadSVG("test.svg");
 });
@@ -310,18 +312,18 @@ function loadSVG(url) {
     if (this.readyState == 4 && this.status == 200) {
        var svgs = xhr.responseXML.getElementsByTagName("svg");
        if (svgs.length) {
-         var newSVG = svgs[0];         
+         var newSVG = svgs[0];
          document.getElementById("container").replaceWith(newSVG);
          container = newSVG;
          setTimeout(drawSVG,0);
-       } else alert("No SVG loaded");       
+       } else alert("No SVG loaded");
     }
   };
   xhr.open("GET", url, true);
   xhr.send();
 }
 
-document.getElementById("fileLoader").onchange = function(event) {  
+document.getElementById("fileLoader").onchange = function(event) {
   if (event.target.files.length != 1) {
     alert("Select only one file");
     return;
@@ -332,11 +334,11 @@ document.getElementById("fileLoader").onchange = function(event) {
     div.innerHTML = event.target.result;
     var svgs = div.getElementsByTagName("svg");
     if (svgs.length) {
-      var newSVG = svgs[0];         
+      var newSVG = svgs[0];
       container.replaceWith(newSVG);
       container = newSVG;
       setTimeout(drawSVG,0);
-    } else alert("No SVG loaded");   
+    } else alert("No SVG loaded");
   };
   reader.readAsText(event.target.files[0]);
 }
