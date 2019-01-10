@@ -234,7 +234,7 @@ function drawSVG() {
   var anyVisiblePaths = false;
   for (var i=0;i<paths.length;i++) {
     var path = paths[i]; // SVGPathElement
-    var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none" && path.fill!="") || path.hasAttribute('fill');
+    var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none") || path.hasAttribute('fill');
     var stroked = (path.style.stroke!==undefined && path.style.stroke!="" && path.style.stroke!="none");
     if (!(filled || stroked)) continue; // not drawable (clip path?)
     anyVisiblePaths = true;
