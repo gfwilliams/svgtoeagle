@@ -27,9 +27,9 @@ file and then execute that in Eagle CAD.
 <b>Note:</b> Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
 </pre>
-  <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
-  <input type="text" id="signalName" value="GND"/>Signal Name (for copper layers, ignored by Eagle otherwise)</input><br/>
-  <input type="text" id="svgScale" value="3.542"/>SVG scale factor (if dimensions not found in document)</input><br/>
+  <input type="text" id="eagleLayer" value="tNames" onchange="drawSVG()"/>Eagle CAD Layer</input><br/>
+  <input type="text" id="signalName" value="GND" onchange="drawSVG()"/>Signal Name (for copper layers, ignored by Eagle otherwise)</input><br/>
+  <input type="text" id="svgScale" value="3.542" onchange="drawSVG()"/>SVG scale factor (if dimensions not found in document)</input><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
   <pre id="log"></pre><br/>
