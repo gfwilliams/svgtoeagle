@@ -27,15 +27,44 @@ file and then execute that in Eagle CAD.
 <b>Note:</b> Filled polys with holes will show up in the preview as
 completely filled - but in Eagle the holes are kept.
 </pre>
-  <input type="text" id="eagleLayer" value="tNames"/>Eagle CAD Layer</input><br/>
-  <input type="text" id="signalName" value="GND"/>Signal Name (for copper layers, ignored by Eagle otherwise)</input><br/>
-  <input type="text" id="svgScale" value="3.542"/>SVG scale factor (if dimensions not found in document)</input><br/>
+  <input type="text" id="eagleLayer" value="tPlace" onchange="drawSVG()"/>Eagle CAD Layer</input><br/>
+  <input type="text" id="signalName" value="GND" onchange="drawSVG()"/>Signal Name (for copper layers, ignored by Eagle otherwise)</input><br/>
+  <input type="text" id="svgScale" value="3.542" onchange="drawSVG()"/>SVG scale factor (if dimensions not found in document)</input><br/>
+  <label>Output format: </label><select id="eagleformat" onchange="drawSVG()"/>
+    <option value="board">Board</option>
+    <option value="library">Library</option>
+  </select><br/>
   <input type="checkbox" id="flipImage" onchange="drawSVG()"/>Flip image horizontally?</input><br/>
   <input type="file" id="fileLoader"/><br/>
   <pre id="log"></pre><br/>
   <textarea id="result" rows="8" cols="80"></textarea><br/>
+  <input type="button" id="dwn-btn" value="Download eagle script"/>
   <div id="container"></div>
   <canvas id="can" style="border:1px solid black;"></canvas>
+<script type='text/javascript'>
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+// Start file download.
+document.getElementById("dwn-btn").addEventListener("click", function(){
+    // Generate download of hello.txt file with some content
+    var text = document.getElementById("result").value;
+    var filename = "import_svg.scr";
+
+    download(filename, text);
+}, false);
+</script>
+
 <script src="simplify.js"></script>
 <script>
 /*
@@ -183,6 +212,7 @@ function drawSVG() {
   var FLIP_HORIZ = document.getElementById("flipImage").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
   var SIGNAL_NAME = document.getElementById("signalName").value;
+  var EAGLE_FORMAT = document.getElementById("eagleformat").value;
 
   container.style.display="block";
   var logarea = document.getElementById("log");
@@ -222,7 +252,11 @@ function drawSVG() {
   canvas.height = size.height*drawMultiplier;
   DRAWSCALE = drawMultiplier / SCALE;
 
-  out("change layer "+EAGLE_LAYER+"; change rank 3; ch pour solid; SET WIRE_BEND 2;\n");
+  if (EAGLE_FORMAT == "board") {
+    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
+  } if (EAGLE_FORMAT == "library") {
+    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
+  }
 
   ctx.beginPath();
   ctx.lineWidth = 1;
@@ -284,9 +318,18 @@ function drawSVG() {
       if (filled) {
         // re-add final point so we loop around
         points.push(points[0]);
-        scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm "
+
+        if (EAGLE_FORMAT == "board") {
+          scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm"
+        } if (EAGLE_FORMAT == "library") {
+          scriptLine = "polygon "+TRACEWIDTH+"mm"
+        }
       } else {
-        scriptLine = "wire "+SIGNAL_NAME+" "+TRACEWIDTH+"mm "
+        if (EAGLE_FORMAT == "board") {
+          scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm"
+        } if (EAGLE_FORMAT == "library") {
+          scriptLine = "polygon "+TRACEWIDTH+"mm"
+        }
       }
       points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)}mm ${(exportHeight-p.y).toFixed(6)}mm)`});
       scriptLine += ";"
