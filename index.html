@@ -52,12 +52,18 @@
                 <li>Enter the layer to use in Eagle</li>
                 <li>Choose whether to flip the image horizontally or not</li>
                 <li>Click the 'Choose File' box below and upload your SVG</li>
-                <li>Copy contents of Textarea and Paste into Eagle CAD</li>
+                <li>Copy contents of Textarea and Paste into Eagle CAD's command box</li>
               </ul>
               <hr>
-              <span>Normally copy/paste works fine, however for complex SVGs the commands become too big to paste into Eagle's command box. You'll need to copy the contents of the Textarea into a '.scr' file and then execute that in Eagle CAD.</span>
+              <span>Normally copy/paste works fine, however for complex SVGs the commands become
+                too big to paste into Eagle's command box. You'll need to click 'Download Eagle Script' 
+                and then load that script in Eagle CAD.</span>
               <hr>
-              <span><strong>Note:</strong> Filled polys with holes will show up in the preview as completely filled - but in Eagle the holes are kept.</span>
+              <span><strong>Note:</strong> Filled polys with holes will show up in the preview as completely
+                filled - but in Eagle the holes are kept.</span>
+              <span><strong>Note:</strong> This tool assumes that 0,0 (the crosshair) is in the bottom left
+              of your board in Eagle (which matches SVGs). If it isn't then the positioning of your graphics
+              may be wrong.</span>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
