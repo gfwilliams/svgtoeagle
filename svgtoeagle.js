@@ -88,7 +88,7 @@ function unpackPoly(poly) {
       if (isInside(path[0], finalPolys[i])) {
         outerPolyIndex = i;
         break;
-      } else if (isInside(finalPolys[i], path)) {
+      } else if (isInside(finalPolys[i][0], path)) {
         // polys in wrong order - old one is inside new one
         var t = path;
         path = finalPolys[i];
