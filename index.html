@@ -116,6 +116,13 @@
               </div>
             </div>
             <div class="mb-3">
+              <label for="">Subsampling <span class="text-muted small">Larger values produce better approximation of SVG paths but increase conversion time</span></label>
+              <input type="text" class="form-control" id="subsampling" placeholder="Subsampling" value="5" required>
+              <div class="invalid-feedback">
+                Subsampling value is required.
+              </div>
+            </div>
+            <div class="mb-3">
               <label for="">Signal Name <span class="text-muted small">(for copper layers, ignored by otherwise)</span></label>
               <input type="text" class="form-control" id="signalName" placeholder="Signal Name" value="GND" required>
               <div class="invalid-feedback">
