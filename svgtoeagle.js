@@ -149,6 +149,7 @@ function plotPoly(points, isFilled) {
 function drawSVG() {
   if (container===undefined) return;
   TRACEWIDTH = parseFloat(document.getElementById("traceWidth").value);
+  SUBSAMPLING = parseFloat(document.getElementById("subsampling").value);
   FLIP_HORIZ = document.getElementById("flipImage").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
   var SIGNAL_NAME = document.getElementById("signalName").value;
