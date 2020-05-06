@@ -260,6 +260,9 @@ function drawSVG() {
       points = simplify(points, SIMPLIFY, SIMPLIFYHQ);
       polys.push(points);
     }
+
+    if (points.length <= 2) continue; // Too few points create Eagle script import error (issue #17)
+
     ctx.strokeStyle = `hsl(${col+=40},100%,50%)`;
     ctx.fillStyle = `hsla(${col+=40},100%,50%,0.4)`;
 
