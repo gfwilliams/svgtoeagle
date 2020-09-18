@@ -275,17 +275,16 @@ function drawSVG() {
       if (filled) {
         // re-add final point so we loop around
         points.push(points[0]);
-
         if (EAGLE_FORMAT == "board") {
           scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm"
         } if (EAGLE_FORMAT == "library") {
           scriptLine = "polygon "+TRACEWIDTH+"mm"
         }
-      } else {
+      } else { // lines
         if (EAGLE_FORMAT == "board") {
-          scriptLine = "polygon "+SIGNAL_NAME+" "+TRACEWIDTH+"mm"
+          scriptLine = "wire "+SIGNAL_NAME+" "+TRACEWIDTH+"mm"
         } if (EAGLE_FORMAT == "library") {
-          scriptLine = "polygon "+TRACEWIDTH+"mm"
+          scriptLine = "wire "+TRACEWIDTH+"mm"
         }
       }
       points.forEach(function(p) { scriptLine += ` (${p.x.toFixed(6)}mm ${(exportHeight-p.y).toFixed(6)}mm)`});
