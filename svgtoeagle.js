@@ -10,8 +10,14 @@ var TRACEWIDTH = 0.1; // in mm
 // Start file download.
 function download_script(filename, text) {
   var text = document.getElementById("result").value;
-  var filename = "import_svg.scr";
   var element = document.createElement('a');
+
+  if (typeof filename === 'undefined') { 
+    filename = 'import_svg.scr'; 
+  } else {
+    var patternFileName = /([^\\\/]+)\.svg$/i;
+    var filename= filename.match(patternFileName)[1] + ".scr";
+  }
 
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
   element.setAttribute('download', filename);
