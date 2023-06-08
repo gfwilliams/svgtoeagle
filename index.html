@@ -103,7 +103,7 @@
           </h4>
             <div class="mb-3">
               <label for="">Eagle CAD Layer</label>
-              <input type="text" class="form-control" id="eagleLayer" placeholder="Eagle CAD Layer" value="tPlace" required>
+              <input type="text" class="form-control" id="eagleLayer" placeholder="Eagle CAD Layer" value="200" required>
               <div class="invalid-feedback">
                 Eagle CAD Layer is required.
               </div>
@@ -151,6 +151,10 @@
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input" id="flipImage">
               <label class="custom-control-label" for="flipImage">Flip image horizontally?</label>
+            </div>
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="layerColor">
+              <label class="custom-control-label" for="layerColor">Split layer by color?</label>
             </div>
             <hr class="mb-4">
             <input class="btn btn-lg btn-block" type="file" id="fileLoader"/><br/>

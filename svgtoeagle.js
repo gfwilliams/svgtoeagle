@@ -157,6 +157,7 @@ function drawSVG() {
   TRACEWIDTH = parseFloat(document.getElementById("traceWidth").value);
   SUBSAMPLING = parseFloat(document.getElementById("subsampling").value);
   FLIP_HORIZ = document.getElementById("flipImage").checked;
+  LAYER_COLOR = document.getElementById("layerColor").checked;
   var EAGLE_LAYER = document.getElementById("eagleLayer").value;
   var SIGNAL_NAME = document.getElementById("signalName").value;
   var EAGLE_FORMAT = document.querySelector('input[name="eagleformat"]:checked').value;
@@ -215,11 +216,7 @@ function drawSVG() {
   canvas.height = size.height*drawMultiplier;
   DRAWSCALE = drawMultiplier / SCALE;
 
-  if (EAGLE_FORMAT == "board") {
-    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
-  } if (EAGLE_FORMAT == "library") {
-    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
-  }
+  ChangeLayer(EAGLE_LAYER);
 
   ctx.beginPath();
   ctx.lineWidth = 1;
@@ -229,6 +226,7 @@ function drawSVG() {
   if (paths.length==0)
     log("No paths found. Did you use 'Object to path' in Inkscape?");
   var anyVisiblePaths = false;
+  var currentLayer = "";
   for (var i=0;i<paths.length;i++) {
     var path = paths[i]; // SVGPathElement
     var filled = (path.style.fill!==undefined && path.style.fill!="" && path.style.fill!="none") || path.hasAttribute('fill');
@@ -269,6 +267,14 @@ function drawSVG() {
     }
     ctx.strokeStyle = `hsl(${col+=40},100%,50%)`;
     ctx.fillStyle = `hsla(${col+=40},100%,50%,0.4)`;
+
+    if(LAYER_COLOR){
+      var targetLayer = LookupLayerForFillColor(EAGLE_LAYER, path.style.fill);
+      if (currentLayer != targetLayer) {
+        currentLayer = targetLayer;
+        ChangeLayer(currentLayer);
+      }
+    }
 
     //plotPoly(points);
     if (filled)
@@ -326,6 +332,25 @@ function loadSVG(url) {
   };
   xhr.open("GET", url, true);
   xhr.send();
+}
+
+var LAYER_COLOR = false;
+var COLOR_MAPPING_OFFSET = 0;
+var COLOR_MAPPING = {};
+
+function LookupLayerForFillColor(EAGLE_LAYER, fillColor) {
+  if (!COLOR_MAPPING.hasOwnProperty(fillColor))
+    COLOR_MAPPING[fillColor] = Number(EAGLE_LAYER) + COLOR_MAPPING_OFFSET++;
+
+  return COLOR_MAPPING[fillColor];
+}
+
+function ChangeLayer(LayerID) {
+  if (EAGLE_FORMAT == "board" && !LAYER_COLOR) {
+    out("CHANGE layer "+LayerID+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
+  } if (EAGLE_FORMAT == "library") {
+    out("CHANGE layer "+LayerID+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
+  }
 }
 
 function convert() {
