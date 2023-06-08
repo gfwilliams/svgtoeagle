@@ -216,11 +216,7 @@ function drawSVG() {
   canvas.height = size.height*drawMultiplier;
   DRAWSCALE = drawMultiplier / SCALE;
 
-  if (EAGLE_FORMAT == "board" && !LAYER_COLOR) {
-    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
-  } if (EAGLE_FORMAT == "library") {
-    out("CHANGE layer "+EAGLE_LAYER+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
-  }
+  ChangeLayer(EAGLE_LAYER);
 
   ctx.beginPath();
   ctx.lineWidth = 1;
@@ -276,7 +272,7 @@ function drawSVG() {
       var targetLayer = LookupLayerForFillColor(EAGLE_LAYER, path.style.fill);
       if (currentLayer != targetLayer) {
         currentLayer = targetLayer;
-        out("CHANGE layer "+currentLayer+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
+        ChangeLayer(currentLayer);
       }
     }
 
@@ -347,6 +343,14 @@ function LookupLayerForFillColor(EAGLE_LAYER, fillColor) {
     COLOR_MAPPING[fillColor] = Number(EAGLE_LAYER) + COLOR_MAPPING_OFFSET++;
 
   return COLOR_MAPPING[fillColor];
+}
+
+function ChangeLayer(LayerID) {
+  if (EAGLE_FORMAT == "board" && !LAYER_COLOR) {
+    out("CHANGE layer "+LayerID+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
+  } if (EAGLE_FORMAT == "library") {
+    out("CHANGE layer "+LayerID+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
+  }
 }
 
 function convert() {
