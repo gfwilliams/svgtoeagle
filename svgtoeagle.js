@@ -193,6 +193,25 @@ function drawSVG() {
     };
   }
 
+  function ChangeLayer(LayerID) {
+    if (EAGLE_FORMAT == "board" && !LAYER_COLOR) {
+      out("CHANGE layer "+LayerID+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
+    } if (EAGLE_FORMAT == "library") {
+      out("CHANGE layer "+LayerID+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
+    }
+  }
+
+  var LAYER_COLOR = false;
+  var COLOR_MAPPING_OFFSET = 0;
+  var COLOR_MAPPING = {};
+
+  function LookupLayerForFillColor(fillColor) {
+    if (!COLOR_MAPPING.hasOwnProperty(fillColor))
+      COLOR_MAPPING[fillColor] = Number(EAGLE_LAYER) + COLOR_MAPPING_OFFSET++;
+  
+    return COLOR_MAPPING[fillColor];
+  }
+
   var specifiedWidth = container.getAttribute("width");
   if (specifiedWidth && specifiedWidth.match(/[0-9.]*mm/)) {
     specifiedWidth = parseFloat(specifiedWidth.slice(0,-2));
@@ -269,7 +288,7 @@ function drawSVG() {
     ctx.fillStyle = `hsla(${col+=40},100%,50%,0.4)`;
 
     if(LAYER_COLOR){
-      var targetLayer = LookupLayerForFillColor(EAGLE_LAYER, path.style.fill);
+      var targetLayer = LookupLayerForFillColor(path.style.fill);
       if (currentLayer != targetLayer) {
         currentLayer = targetLayer;
         ChangeLayer(currentLayer);
@@ -332,25 +351,6 @@ function loadSVG(url) {
   };
   xhr.open("GET", url, true);
   xhr.send();
-}
-
-var LAYER_COLOR = false;
-var COLOR_MAPPING_OFFSET = 0;
-var COLOR_MAPPING = {};
-
-function LookupLayerForFillColor(EAGLE_LAYER, fillColor) {
-  if (!COLOR_MAPPING.hasOwnProperty(fillColor))
-    COLOR_MAPPING[fillColor] = Number(EAGLE_LAYER) + COLOR_MAPPING_OFFSET++;
-
-  return COLOR_MAPPING[fillColor];
-}
-
-function ChangeLayer(LayerID) {
-  if (EAGLE_FORMAT == "board" && !LAYER_COLOR) {
-    out("CHANGE layer "+LayerID+"; CHANGE rank 3; CHANGE pour solid; SET WIRE_BEND 2;\n");
-  } if (EAGLE_FORMAT == "library") {
-    out("CHANGE layer "+LayerID+"; CHANGE pour solid; Grid mm; SET WIRE_BEND 2;\n");
-  }
 }
 
 function convert() {
